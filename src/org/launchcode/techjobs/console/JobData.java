@@ -7,9 +7,7 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by LaunchCode
@@ -43,6 +41,7 @@ public class JobData {
             }
         }
 
+        values.sort(Comparator.comparing(String::toLowerCase));
         return values;
     }
 
@@ -51,7 +50,32 @@ public class JobData {
         // load data, if not already loaded
         loadData();
 
-        return allJobs;
+        return new ArrayList<>(allJobs);
+    }
+
+    public static ArrayList<HashMap<String, String>> findByValue(String query) {
+
+        // load data, if not already loaded
+        loadData();
+        ArrayList<HashMap<String, String>> jobResults = new ArrayList<>();
+        for (HashMap<String, String> job: allJobs) {
+            if(isMatch(job, query)){
+                jobResults.add(job);
+            }
+        }
+        return jobResults;
+    }
+
+    private static Boolean isMatch(HashMap<String, String> job, String query){
+        boolean result = false;
+        for (Map.Entry<String, String> entry: job.entrySet()) {
+            String aValue = entry.getValue();
+            if (aValue.toLowerCase().contains(query.toLowerCase())) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
 
     /**
@@ -76,7 +100,7 @@ public class JobData {
 
             String aValue = row.get(column);
 
-            if (aValue.contains(value)) {
+            if (aValue.toLowerCase().contains(value.toLowerCase())) {
                 jobs.add(row);
             }
         }
@@ -100,7 +124,7 @@ public class JobData {
             Reader in = new FileReader(DATA_FILE);
             CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
             List<CSVRecord> records = parser.getRecords();
-            Integer numberOfColumns = records.get(0).size();
+            int numberOfColumns = records.get(0).size();
             String[] headers = parser.getHeaderMap().keySet().toArray(new String[numberOfColumns]);
 
             allJobs = new ArrayList<>();
